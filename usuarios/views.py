@@ -1,6 +1,10 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth.models import User
+from django.contrib import messages
+from django.contrib.messages import constants
+from django.urls import reverse
+from django.contrib import auth
 
 # Create your views here.
 def cadastro(request):
@@ -13,16 +17,33 @@ def cadastro(request):
         confirmar_senha = request.POST.get('confirmar_senha')
 
         if not senha == confirmar_senha:
-            return redirect('/usuarios/cadastro')
+            messages.add_message(request, constants.ERROR, 'As senhas não conhecidem!')
+            return redirect(reverse('cadastro'))
         
-        # TODO: validar força da senha 
+        user = User.objects.filter(username=username)
 
         if user.exists():
-            return redirect('/usuarios/cadastro')
+            messages.add_message(request, constants.ERROR, 'Usuáiro já existe!')
+            return redirect(reverse('cadastro'))
         
         user = User.objects.create_user(username=username, email=email, password=senha)
-        
-        return HttpResponse('teste')
+        messages.add_message(request, constants.SUCCESS, 'Usuário Salvo com sucesso!')
+        user.save()
+        return redirect(reverse('login'))
 
+def login(request):
+    if request.method == "GET":
+        return render(request, 'login.html')
+    elif request.method == 'POST':
+        username = request.POST.get('username')
+        senha = request.POST.get('senha')
         
 
+        user = auth.authenticate(username=username, password=senha)
+
+        if not user: 
+            messages.add_message(request, constants.ERROR, "Nome de usuário ou senha inválidos.")
+            return redirect(reverse('login'))
+
+        auth.login(request, user)
+        return redirect('/eventos/novo_evento/')
