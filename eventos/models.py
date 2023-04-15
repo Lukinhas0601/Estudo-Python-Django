@@ -20,4 +20,8 @@ class Evento(models.Model):
         return self.nome
     
 
+class Certificados(models.Model):
+    certificado = models.ImageField(upload_to='certificados')
+    participante = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    evento = models.ForeignKey(Evento, on_delete=models.DO_NOTHING)
 
